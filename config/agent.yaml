@@ -1,0 +1,39 @@
+# Agent Manifest — AgentRegistry entry point
+# AgentRegistry (mediator/registry/agent_registry.py) reads every key below at
+# ROOT level — do NOT nest keys under an `agent:` block.
+id: "CMN-C2-275"
+name: "BillOneInvoiceAgent"
+namespace: "cmn"
+version: "0.1.0"
+enabled: true
+category: "Cat 2"
+generation_mode: "deterministic"  # deterministic | llm — the pipeline's primary mode
+# stays deterministic. InferBillOneFieldsNode ALSO makes a best-effort LLM gap-fill
+# attempt when the regex extraction leaves invoice_number/issuer_name empty (Step 8e);
+# any failure (including no secret provisioned) degrades silently to the pre-existing
+# deterministic result — see src/nodes/infer_billone_fields_node.py.
+industry: "CMN"
+
+base_type: "ToolCallingAgent"
+
+# Entry point — single dotted import path (module.Class), NOT split module:/class:.
+class: "src.graph.graph.BillOneInvoiceAgent"
+
+required_trust_level: "VERIFIED_EXTERNAL"
+
+# Compile-time gates — declare every ctx.secrets.require() key + constructed extra.
+# requires.* is a COMPILE gate, not documentation (see test_config.py). The three
+# Azure OpenAI secrets are deliberately NOT declared here even though
+# InferBillOneFieldsNode's LLM gap-filler reads them via ctx.secrets.require(): this
+# is an OPTIONAL best-effort enhancement (Step 8e, graceful degrade), and per-namespace
+# secret provisioning is not fleet-wide guaranteed the way an extra's importability is —
+# declaring them would refuse to COMPILE this agent in any environment where they are
+# not provisioned, which is exactly the failure this design must never have. A missing
+# secret is meant to degrade the one node silently at invoke time, never block compile.
+# extras: ["openai"] IS declared — shared.services.llm.azure_openai_client imports
+# langchain_openai at module top level, and unlike a per-namespace secret, "openai" is
+# always present (it's in the fleet-wide AGENTCORE_WHEEL_SPEC every CI job and deploy
+# path installs), so this declaration can never fail its compile-time find_spec check.
+requires:
+  secrets: []
+  extras: ["openai"]

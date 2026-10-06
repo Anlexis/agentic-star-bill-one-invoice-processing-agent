@@ -1,0 +1,48 @@
+[project]
+name = "cmn-c2-275"
+version = "0.1.0"
+description = "BillOneInvoiceAgent — AgentCore Template"
+requires-python = ">=3.11"
+# The framework (agenticstar-agentcore) is NOT a public-PyPI dependency; it is
+# provided by the CI environment at test time instead — either placed directly
+# on the interpreter path or installed from a private package registry,
+# depending on the repo's current CI generation. Pinning it here would make
+# `pip install -e .` fail because it is not resolvable from the default index.
+dependencies = [
+    "agenticstar-agentcore[marketplace,openai]==1.0.3",]
+
+[project.optional-dependencies]
+dev = [
+    "types-PyYAML==6.0.12.20260815",
+    "pytest==9.0.3",
+    "pytest-cov==5.0.0",
+    "pytest-asyncio==1.4.0",
+    "ruff==0.4.4",
+    "mypy==1.10.0",
+]
+
+[build-system]
+requires = ["setuptools==68.2.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+disallow_subclassing_any = false
+exclude = ["src/examples/"]
+
+[[tool.mypy.overrides]]
+module = ["framework.*", "shared.*", "langgraph.*", "langchain_core.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# The framework package ships no type information, so AgentState resolves to Any
+# and every field of a State subclass fails valid-type. That is one cause, not
+# one error per field — chasing the individual errors would mean annotating
+# around a single upstream fact.
+module = ["src.schemas.state"]
+disable_error_code = ["valid-type"]

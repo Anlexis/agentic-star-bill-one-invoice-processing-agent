@@ -1,0 +1,14 @@
+# Runtime parameters — loaded at start-up and passed as Graph(config=...).
+# Separate from config/agent.yaml, which is the static registration manifest and
+# carries no runtime values.
+
+# Retry ceiling for the backbone's retry routing (read by the framework).
+max_retry: 3
+# Per-call Bill One request budget, in seconds. A transport that returns later
+# than this is reported as an error rather than silently accepted.
+timeout_s: 30
+
+# Bill One integration settings. Forwarded to the inner workflow graph by
+# BillOneWorkflowGraphNode._parent_config() and read by CallBillOneApiNode.
+billone:
+  base_url: "https://api.billone.jp/v1"
